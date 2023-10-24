@@ -1,0 +1,22 @@
+config:
+  plugins:
+    expect: {}
+  phases:
+    - duration: 1
+      arrivalRate: 1
+  ensure:
+    maxErrorRate: 0
+  http:
+    timeout: 30
+  environments:
+    local:
+      target: 'http://localhost:8100'
+    prod:
+      target: 'https://dw1-svc-production.up.railway.app'
+scenarios:
+  - flow:
+      - get:
+          name: 'Health check'
+          url: '/health'
+          expect:
+            - statusCode: 200

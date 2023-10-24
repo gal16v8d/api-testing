@@ -1,0 +1,94 @@
+config:
+  plugins:
+    expect: {}
+  phases:
+    - name: 'card endpoint tests'
+      duration: 1
+      arrivalRate: 1
+  ensure:
+    maxErrorRate: 0
+  http:
+    timeout: 60
+  processor: '../processor.js'
+  environments:
+    local:
+      target: 'http://localhost:8100'
+    prod:
+      target: 'https://dw1-svc-production.up.railway.app'
+scenarios:
+  - name: 'Cards tests'
+    beforeScenario: 'scenarioSetup'
+    flow:
+      - get:
+          beforeRequest: "beforeRequest"
+          ifTrue: "isLocal"
+          name: 'Card Listing'
+          url: '/dw1/api/cards'
+          capture:
+            json: '$'
+            as: 'data'
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - matchesRegexp: "\\[.*\\]"
+      - think: 1
+
+      - get:
+          ifTrue: "isLocal"
+          name: 'Card You'
+          url: '/dw1/api/cards/{{ data[0]._id}}'
+          capture:
+            - json: '$.name'
+              as: name
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: name
+            - equals:
+                - 'You'
+                - '{{ name }}'
+
+      - post:
+          ifTrue: "isLocal"
+          name: 'Create card'
+          url: '/dw1/api/cards'
+          json:
+            number: 66
+            name: 'Testmon'
+            exchangeable: false
+          expect:
+            - statusCode: 201
+      - think: 1
+
+      - get:
+          ifTrue: "isLocal"
+          name: 'Card Listing after create card'
+          url: '/dw1/api/cards'
+          capture:
+            json: '$'
+            as: 'dataUpd'
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - matchesRegexp: "\\[.*\\]"
+      - think: 1
+
+      - put:
+          ifTrue: "isLocal"
+          name: 'Update number 66'
+          url: '/dw1/api/cards/{{ dataUpd[66]._id }}'
+          json:
+            number: 66
+            name: 'Testtmon'
+            exchangeable: false
+          expect:
+            - statusCode: 200
+            - contentType: json
+      - think: 1
+
+      - delete:
+          ifTrue: "isLocal"
+          name: 'Delete number 66'
+          url: '/dw1/api/cards/{{ dataUpd[66]._id }}'
+          expect:
+            - statusCode: 204
