@@ -52,31 +52,23 @@ scenarios:
           ifTrue: "isLocal"
           name: 'Create card'
           url: '/dw1/api/cards'
+          capture:
+            json: '$'
+            as: 'dataCreated'
           json:
             number: 66
             name: 'Testmon'
             exchangeable: false
           expect:
             - statusCode: 201
-      - think: 1
-
-      - get:
-          ifTrue: "isLocal"
-          name: 'Card Listing after create card'
-          url: '/dw1/api/cards'
-          capture:
-            json: '$'
-            as: 'dataUpd'
-          expect:
-            - statusCode: 200
             - contentType: json
-            - matchesRegexp: "\\[.*\\]"
+            - hasProperty: _id
       - think: 1
 
       - put:
           ifTrue: "isLocal"
           name: 'Update number 66'
-          url: '/dw1/api/cards/{{ dataUpd[66]._id }}'
+          url: '/dw1/api/cards/{{ dataCreated._id }}'
           json:
             number: 66
             name: 'Testtmon'
@@ -89,6 +81,6 @@ scenarios:
       - delete:
           ifTrue: "isLocal"
           name: 'Delete number 66'
-          url: '/dw1/api/cards/{{ dataUpd[66]._id }}'
+          url: '/dw1/api/cards/{{ dataCreated._id }}'
           expect:
             - statusCode: 204
